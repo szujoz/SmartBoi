@@ -1,4 +1,4 @@
-#include "dht11.h"
+#include "myDht11.h"
 
 DHT11::DHT11(int Pin)
 {
@@ -34,11 +34,11 @@ void DHT11::process(void)
  
   pinMode(pin, INPUT);
   /// TODO timeout
-  for(int i = 0; i < 200; i++)
+  /*for(int i = 0; i < 200; i++)
   {
     if (digitalRead(pin) == HIGH)   break;
-  }
-  //while (digitalRead(pin) == HIGH);
+  }*/
+  while (digitalRead(pin) == HIGH);
   delayMicroseconds(80); // DHT11 response, pulled the bus 80us
   if (digitalRead(pin) == LOW);
     delayMicroseconds(80); // DHT11 80us after the bus pulled to start sending data
@@ -70,27 +70,18 @@ void DHT11::process(void)
 uint8_t DHT11::readData(void)
 {
   uint8_t data;
-  
+
   for (int i = 0; i < 8; i ++)
   {
     if (digitalRead(pin) == LOW)
     {
-      for(int i = 0; i < 200; i++)
-      {
-        if (digitalRead(pin) == LOW)  break;
-      }
-      //while (digitalRead(pin) == LOW);   // wait for 50us
+      while (digitalRead(pin) == LOW);     // wait for 50us
         delayMicroseconds(30);             // determine the duration of the high level to determine the data is '0 'or '1'
       
       if (digitalRead(pin) == HIGH)
         data |= (1 << (7-i));               // high front and low in the post
 
-      /// TODO timeout
-      for(int i = 0; i < 200; i++)
-      {
-        if (digitalRead(pin) == HIGH)  break;
-      }
-      //while (digitalRead(pin) == HIGH);  // data '1 ', wait for the next one receiver
+      while (digitalRead (pin) == HIGH);    // data '1 ', wait for the next one receiver
      }
   }
   
