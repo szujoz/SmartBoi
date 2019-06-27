@@ -1,5 +1,6 @@
 #include "ssd1306.h"
 #include <Wire.h>
+#include <SPI.h>
 
 const unsigned char PROGMEM logo_bmp[32]=
 { B00000000, B11000000,
@@ -42,7 +43,7 @@ SSD1306::SSD1306(void)
   logo.height = 16U;
 
   // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
-  display = new Adafruit_SSD1306(screen.width, screen.height, &Wire);
+  display = new Adafruit_SSD1306(screen.width, screen.height, &Wire, -1);
 }
 
 SSD1306::~SSD1306(void)
@@ -55,26 +56,32 @@ bool SSD1306::init(void)
 {
   bool initialized = false;
 
+  Serial.println(logo.width);
+  Serial.println("SSD1306 init has been started");
+
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   // Address 0x3C for 128x32
-  if (!display->begin(SSD1306_SWITCHCAPVCC, 0x3C))
+  if( (display->begin(SSD1306_SWITCHCAPVCC, 0x3C)) == false)
   {
     Serial.println(F("SSD1306 allocation failed"));
-    this->~SSD1306();
+    for(;;); // Don't proceed, loop forever
+    //this->~SSD1306();
     return initialized;
   }
+
+  Serial.println("SSD1306 display");
 
   // Show initial display buffer contents on the screen, the library initializes this with an Adafruit splash screen.
   display->display();
   delay(2000);
 
-  // Clear the buffer.
-  display->clearDisplay();
+    welcomePage();
 
   // Show the display buffer on the screen. You MUST call display() after drawing commands to make them visible on screen!
   display->display();
   delay(2000);
 
+  Serial.println(F("SSD1306 allocation successful"));
   initialized = true;
   return initialized;
 }
@@ -95,7 +102,7 @@ void SSD1306::welcomePage(void)
   display->stopscroll();  
 }
 
-void SSD1306::mainPage(void)
+void SSD1306::mainPage(float t, float h)
 {
   display->clearDisplay();
   display->setCursor(0,0);
@@ -103,9 +110,9 @@ void SSD1306::mainPage(void)
 
   display->println(F(""));
   display->print(F("Temperature: "));
-  //display->println(sensTempr);
+  display->println(t);
   display->print(F("Humidity: "));
-  //display->print(sensHumid);
+  display->print(h);
 
   display->display();
 }
