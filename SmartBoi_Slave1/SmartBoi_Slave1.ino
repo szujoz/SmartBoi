@@ -1,73 +1,43 @@
-#include <DHT.h>
-#include <DHT_U.h>
+#include "myDht11.h"
 #include "led.h"
 #include "ssd1306.h"
 
 // General infos
-#define topologyId      (1U)
-#define unitName        ("Beka")
-#define temprSensorPin  (14U)     // D5
-#define ledStatusPin    (16U)     // D0
+#define TOPOLOGY_ID      (1U)
+#define UNIT_NAME        ("Beka")
+#define DHT11_SENS_PIN   (14U)     // D5
+#define LED_STATUS_PIN   (16U)     // D0
 
 // Components
-DHT dht(temprSensorPin, DHT11);
-//DHT11    sensor(temprSensorPin);
-LED      statusLed(ledStatusPin);
-SSD1306* lcd;
+SSD1306* lcd      = SSD1306::getInstance();
+DHT_11*  sensDHT  = DHT_11::getInstance(DHT11_SENS_PIN);
+LED      statusLed(LED_STATUS_PIN);
 
 void setup()
 {
   // Serial communication
   Serial.begin(115200);
   Serial.println();
-  Serial.print(unitName);
+  Serial.print(UNIT_NAME);
   Serial.print(" [Slave ID: ");
-  Serial.print(topologyId);
+  Serial.print(TOPOLOGY_ID);
   Serial.println("] is starting up");
 
-  delay(1000);
+  delay(200);
 
-  //sensor.init(); 
-  dht.begin();
+  Serial.println("Initialize modules");
   statusLed.init();
-  lcd->getInstance();
+  lcd->init();
+  sensDHT->init();
+
+  Serial.println("Program setup is finished");
 }
 
 void loop()
 {
   statusLed.toggle();
-  //sensor.process();
+  sensDHT->process();
+  lcd->mainPage(sensDHT->getTempr(),sensDHT->getHumid());
   Serial.println("ping");
   delay(1000);
-
-    // Reading temperature or humidity takes about 250 milliseconds!
-  // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
-  float h = dht.readHumidity();
-  // Read temperature as Celsius (the default)
-  float t = dht.readTemperature();
-  // Read temperature as Fahrenheit (isFahrenheit = true)
-  float f = dht.readTemperature(true);
-
-  // Check if any reads failed and exit early (to try again).
-  if (isnan(h) || isnan(t) || isnan(f)) {
-    Serial.println(F("Failed to read from DHT sensor!"));
-    return;
-  }
-
-  // Compute heat index in Fahrenheit (the default)
-  float hif = dht.computeHeatIndex(f, h);
-  // Compute heat index in Celsius (isFahreheit = false)
-  float hic = dht.computeHeatIndex(t, h, false);
-
-  Serial.print(F("Humidity: "));
-  Serial.print(h);
-  Serial.print(F("%  Temperature: "));
-  Serial.print(t);
-  Serial.print(F("°C "));
-  Serial.print(f);
-  Serial.print(F("°F  Heat index: "));
-  Serial.print(hic);
-  Serial.print(F("°C "));
-  Serial.print(hif);
-  Serial.println(F("°F"));
 }
